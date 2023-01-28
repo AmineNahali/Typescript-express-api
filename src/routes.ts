@@ -2,21 +2,20 @@ import {Express, Request, Response} from "express";
 import { createUserHandler} from "./controller/user.controller";
 import validateRequest from "./middleware/validateRequest";
 import { createUserSchema, createUserSessionSchema} from "./schema/user.schema";
-import { createUserSessionHandler } from "./controller/session.controller";
+import { createUserSessionHandler, invalidateUserSessionHandler, getUserSessionHandler } from "./controller/session.controller";
+import requiresUser from "./middleware/requiresUser";
 
 
 export default function(app: Express){
-    app.get("/", (req:Request, res:Response)=>{res.json({"msg":"welcome to the matrix"})});
-
-    //-Register >>> POST /api/user
-    app.post("/api/users", validateRequest(createUserSchema),createUserHandler);
-    //-Login    >>> POST /api/sessions
-    app.post(
-        "/api/sessions",
-        validateRequest(createUserSessionSchema),
-        createUserSessionHandler
-      );
-    //-Get user's session >> GET /api/sessions
-
-    //-Logout >> DELETE /api/sessions
+  //-Register >>> POST /api/user
+  app.post("/api/users", validateRequest(createUserSchema), createUserHandler);
+  
+  //-Login    >>> POST /api/sessions
+  app.post("/api/sessions", validateRequest(createUserSessionSchema), createUserSessionHandler);
+  
+  //-Get user's session >> GET /api/sessions
+  app.get("/api/sessions", requiresUser, getUserSessionHandler);
+  
+  //-Logout >> DELETE /api/sessions
+  app.delete("/api/sessions", requiresUser,invalidateUserSessionHandler);
 }
